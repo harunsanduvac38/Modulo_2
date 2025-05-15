@@ -226,4 +226,14 @@ having cant_prod >= 2;
     where p.precio >= 220
     group by f.id_fabricante;
     
+-- 39 Devuelve un listado con los nombres de los fabricantes y el número de productos que tiene cada uno
+-- con un precio superior o igual a 220 € y que tengan mas de 1 producto con esas condiciones.
+  select f.fabricante, count(p.producto) cant_prod 
+    from fabricantes f
+    join productos p on p.fk_fabricante = f.id_fabricante
+    where p.precio >= 220
+    group by f.id_fabricante
+    having cant_prod > 1;
+
+    
 
