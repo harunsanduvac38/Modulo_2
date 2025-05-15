@@ -105,7 +105,15 @@ from productos p;
 select max(p.precio) max_precio
 from productos p;
 -- x19 Lista el nombre y el precio del producto más barato.
+select p.id_producto, p.producto, p.precio
+from productos p
+where p.precio = (select min(p.precio) FROM productos p);
+
 -- x20 Lista el nombre y el precio del producto más caro.
+select p.id_producto, p.producto, p.precio
+from productos p
+where p.precio = (select max(p.precio) FROM productos p);
+
 -- 21 Calcula la suma de los precios de todos los productos.
 select sum(p.precio) total_precio
 from productos p;
