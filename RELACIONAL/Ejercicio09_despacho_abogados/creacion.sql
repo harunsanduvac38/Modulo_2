@@ -3,6 +3,8 @@ create database 07_abogados;
 
 use 07_abogados;
 
+set FOREIGN_KEY_CHECKS = 0;
+
 create table personas(
 	id_persona int auto_increment,
     tipo_doc varchar(3) not null,
@@ -86,3 +88,5 @@ create table intervenciones(
     foreign key(fk_empleado) references empleados(id_empleado),
     foreign key(fk_expediente) references expedientes(id_expediente)
 );
+
+SET FOREIGN_KEY_CHECKS=1;
