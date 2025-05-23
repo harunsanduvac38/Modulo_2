@@ -503,6 +503,10 @@ select cli.nombre_cliente, concat(cli.nombre_contacto, cli.apellido_contacto) co
 from clientes cli
 join empleados emp on emp.id_empleado = cli.fk_empleado_rep_ventas;
 
+select c.id_cliente, c.nombre_cliente, e.id_empleado, e.nombre
+from clientes c
+join empleados e on c.fk_empleado_rep_ventas = e.id_empleado;
+
 -- 50 Calcula la fecha del primer y último pago realizado por cada uno de los clientes.
   -- El listado deberá mostrar el nombre y los apellidos de cada cliente.
   
@@ -510,6 +514,11 @@ join empleados emp on emp.id_empleado = cli.fk_empleado_rep_ventas;
   from pagos pag
   join clientes cli on cli.id_cliente = pag.fk_cliente
   group by cli.id_cliente;
+  
+  select c.id_cliente, c.nombre_cliente, min(p.fecha_pago) primera, max(p.fecha_pago) ultima
+from clientes c
+join pagos p on c.id_cliente = p.fk_cliente
+group by c.id_cliente;
   
 
 -- 51 Los clientes cuyo límite de crédito sea mayor que los pagos que haya realizado. (Sin utilizar INNER JOIN).
@@ -531,12 +540,21 @@ select emp.id_empleado, emp.nombre empleado, concat(emp.apellido1, ' ', coalesce
 from empleados emp
 join empleados jef on jef.id_empleado = emp.fk_jefe;
 
+select e.id_empleado, e.nombre, j.id_empleado id_jefe, j.nombre nombre_jefe
+from empleados e
+left join empleados j on e.fk_jefe = j.id_empleado;
+
 -- 53 ¿Cuántos pedidos hay en cada estado? Ordena el resultado de forma descendente por el número de pedidos.
 
 select ped.estado, count(ped.id_pedido) cant_pedido
 from pedidos ped
 group by ped.estado
 order by cant_pedido desc;
+
+select estado, count(*) cant
+from pedidos
+group by estado
+order by cant desc;
 
 -- 54 Devuelve las oficinas donde no trabajan ninguno de los empleados que 
    -- hayan sido los representantes de ventas de algún cliente que haya realizado la compra de algún producto de la gama Frutales.
@@ -561,6 +579,10 @@ select cli.nombre_cliente, cli.nombre_contacto, cli.apellido_contacto
 from clientes cli
 where cli.pais = 'Spain';
 
+select *
+from clientes
+where pais = 'Spain';
+
 -- 56 Devuelve un listado que muestre solamente los empleados que no tienen un cliente asociado junto con los datos de la oficina donde trabajan.
 
 select emp.id_empleado, emp.nombre, emp.apellido1, emp.apellido2, ofi.id_oficina, ofi.oficina, ofi.ciudad
@@ -583,6 +605,14 @@ select pro.id_producto, pro.nombre, pro.dimensiones, pro.cantidad_en_stock
 from productos pro
 where pro.cantidad_en_stock <= (select min(cantidad_en_stock) from productos);
 
+select *
+from productos
+where cantidad_en_stock = (select min(cantidad_en_stock) from productos);
+
+select *
+from productos
+where cantidad_en_stock <= all (select cantidad_en_stock from productos);
+
 
 -- 58 Calcula cuántos clientes tiene cada una de las ciudades que empiezan por M
 
@@ -591,11 +621,20 @@ from clientes cli
 where cli.ciudad like 'M%'
 group by cli.ciudad;
 
+select ciudad, count(*)
+from clientes
+where ciudad like 'M%'
+group by ciudad;
+
 -- 59 Devuelve un listado de todos los pedidos que han sido entregados en el mes de enero de cualquier año.
 
 select ped.id_pedido, ped.fecha_pedido, ped.fecha_entrega, ped.comentarios
 from pedidos ped
 where month(ped.fecha_entrega) = '1';
+
+select *
+from pedidos
+where month(fecha_pedido) = 1;
 
 -- 60 ¿Cuál fue el pago medio en 2009?
 
@@ -604,11 +643,19 @@ from pagos pag
 where year(pag.fecha_pago) = '2009'
 group by year(pag.fecha_pago);
 
+select 2009, avg(total) media
+from pagos
+where year(fecha_pago) = 2009;
+
 -- 61 Devuelve el nombre del cliente con mayor límite de crédito.
 
 select cli.id_cliente, cli.nombre_cliente, cli.nombre_contacto, cli.apellido_contacto, cli.limite_credito
 from clientes cli
 where cli.limite_credito = (select max(limite_credito) from clientes );
+
+select *
+from clientes
+where limite_credito = (select max(limite_credito) from clientes);
 
 -- 62 Devuelve el listado de clientes indicando el nombre del cliente y cuántos pedidos ha realizado.
 	-- Tenga en cuenta que pueden existir clientes que no han realizado ningún pedido.
@@ -618,12 +665,22 @@ where cli.limite_credito = (select max(limite_credito) from clientes );
     left join pedidos ped on ped.fk_cliente = cli.id_cliente
     group by cli.id_cliente;
     
+    select c.id_cliente, c.nombre_cliente, count(p.id_pedido) cant_pedidos
+from clientes c
+left join pedidos p on c.id_cliente = p.fk_cliente
+group by c.id_cliente
+order by cant_pedidos;
+    
 -- 63 Devuelve un listado de los productos que nunca han aparecido en un pedido. 
      -- El resultado debe mostrar el nombre y la descripción.
      
      select pro.id_producto, pro.nombre, pro.dimensiones, pro.descripcion, pro.cantidad_en_stock
      from productos pro
      where pro.id_producto not in (select fk_producto from detalles_pedido);
+     
+     select *
+from productos
+where id_producto not in (select distinct fk_producto from detalles_pedido);
      
 -- 64 Devuelve el nombre, apellidos, puesto y teléfono de la oficina de aquellos empleados que no sean representante de ventas de ningún cliente.
 
@@ -633,6 +690,8 @@ join oficinas ofi on ofi.id_oficina = emp.fk_oficina
 where emp.id_empleado != ALL (select fk_empleado_rep_ventas from clientes)
 order by emp.id_empleado;
 
+-- IGUAL AL 56
+
 -- 65 Devuelve un listado que muestre el nombre de cada empleados, el nombre de su jefe y el nombre del jefe de sus jefe.
 
 select emp.id_empleado, emp.nombre empleado_nombre, concat(emp.apellido1, coalesce(emp.apellido2, ' ')) empleado_apellidos,
@@ -641,11 +700,21 @@ from empleados emp
 left join empleados jef1 on jef1.id_empleado = emp.fk_jefe
 left join empleados jef2 on jef2.id_empleado = jef1.fk_jefe;
 
+select emp.id_empleado, emp.nombre, jefes.id_empleado id_jefe, jefes.nombre jefe, jefazos.id_empleado id_jefazo, jefazos.nombre jefazo
+from empleados emp
+left join empleados jefes on emp.fk_jefe = jefes.id_empleado
+left join empleados jefazos on jefes.fk_jefe = jefazos.id_empleado; 
+
 -- 66 Muestre la suma total de todos los pagos que se realizaron para cada uno de los años que aparecen en la tabla pagos.
 
 select year(pag.fecha_pago), sum(pag.total) total_pago
 from pagos pag
 group by year(pag.fecha_pago);
+
+select year(fecha_pago) anyo, sum(total) total
+from pagos
+group by year(fecha_pago)
+order by anyo;
 
 -- 67 Devuelve un listado que muestre solamente los clientes que no han realizado ningún pedido.
 
@@ -653,11 +722,20 @@ select distinct cli.id_cliente, cli.nombre_cliente, cli.nombre_contacto, cli.ape
 from clientes cli
 where cli.id_cliente not in (select fk_cliente from pedidos);
 
+select c.*
+from clientes c
+left join pedidos on c.id_cliente = fk_cliente
+where id_pedido is null;
+
 -- 68 Devuelve el nombre del cliente con mayor límite de crédito utilizando una subconsulta
 
 select cli.id_cliente, cli.nombre_cliente, cli.nombre_contacto, cli.apellido_contacto, cli.limite_credito
 from clientes cli
 where cli.limite_credito = (select max(limite_credito) from clientes);
+
+select *
+from clientes
+where limite_credito = (select max(limite_credito) from clientes);
 
 
 -- 69 Devuelve un listado con el código de pedido, código de cliente, fecha esperada y 
@@ -688,11 +766,17 @@ select emp.id_empleado, emp.nombre empleado, emp.apellido1, emp.puesto
 from empleados emp
 where emp.id_empleado != ALL (select fk_empleado_rep_ventas from clientes);
 
+-- YA ESTA HECHO
+
 -- 71 Devuelve el nombre del producto que tenga el precio de venta más caro utilizando una subconsulta
 
 select pro.id_producto, pro.nombre, pro.descripcion, pro.precio_venta
 from productos pro
 where pro.precio_venta = (select max(precio_venta) from productos);
+
+select *
+from productos
+where precio_venta = (select max(precio_venta) from productos);
 
 -- 72 Devuelve un listado con los nombres de los clientes y el total pagado por cada uno de ellos. 
    -- Tenga en cuenta que pueden existir clientes que no han realizado ningún pago.
@@ -702,6 +786,11 @@ where pro.precio_venta = (select max(precio_venta) from productos);
    left join pagos pag on pag.fk_cliente = cli.id_cliente
    group by cli.id_cliente;
    
+   select id_cliente, nombre_cliente, sum(total), coalesce(sum(total), 0) total
+from clientes
+left join pagos on id_cliente = fk_cliente
+group by id_cliente;
+   
 -- 73 ¿Cuántos clientes tiene cada país?
 
 select  ofi.pais, count(distinct cli.id_cliente)
@@ -709,6 +798,16 @@ from clientes cli
 join empleados emp on cli.fk_empleado_rep_ventas = emp.id_empleado
 join oficinas ofi on ofi.id_oficina = emp.fk_oficina
 group by ofi.pais;
+
+select pais, count(*) cant
+from clientes
+group by pais;
+
+select o.pais, count(distinct c.id_cliente) cant
+from clientes c
+join empleados e on c.fk_empleado_rep_ventas = e.id_empleado
+right join oficinas o on e.fk_oficina = o.id_oficina
+group by o.pais;
 
 -- 74 La misma información que en la pregunta anterior, pero agrupada por código de producto filtrada por los códigos que empiecen por OR.
 
@@ -723,6 +822,12 @@ group by ofi.pais;
     group by pro.id_producto
     having total_facturado > 3000;
     
+    select p.id_producto, p.nombre, sum(dp.cantidad) cant, sum(dp.cantidad * dp.precio_unidad) total, sum(dp.cantidad * dp.precio_unidad)* 1.21 con_iva
+from productos p
+join detalles_pedido dp on p.id_producto = dp.fk_producto
+group by p.id_producto
+having total > 3000;
+    
     
 -- 76 Calcula el número de productos diferentes que hay en cada uno de los pedidos.
 
@@ -730,9 +835,16 @@ select det.fk_pedido id_pedido, count(det.fk_producto) cant_producto
 from detalles_pedido det
 group by det.fk_pedido;
 
+select fk_pedido, count(fk_producto)
+from detalles_pedido
+group by fk_pedido;
+
 -- 77 ¿Cuántos empleados hay en la compañía?
 
 select count(id_empleado) cant_empleado
+from empleados;
+
+select count(*) cant
 from empleados;
 
 -- 78 Devuelve el nombre de los clientes a los que no se les ha entregado a tiempo un pedido.
