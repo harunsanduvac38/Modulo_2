@@ -539,10 +539,45 @@ where p.fecha_entrega <= p.fecha_esperada;
 	-- NO HAY. LA FK_OFICINA EN EMPLEADOS ES NOT NULL
     
 -- *** Vistas ***
--- 80 Escriba una vista que se llame listado_pagos_clientes que muestre un listado donde aparezcan todos los clientes y los pagos que ha realizado cada uno de ellos. La vista deberá tener las siguientes columnas: nombre y apellidos del cliente concatenados, teléfono, ciudad, pais, fecha_pago, total del pago, id de la transacción
--- 81 Escriba una vista que se llame listado_pedidos_clientes que muestre un listado donde aparezcan todos los clientes y los pedidos que ha realizado cada uno de ellos. La vista deáber tener las siguientes columnas: nombre y apellidos del cliente concatendados, teléfono, ciudad, pais, código del pedido, fecha del pedido, fecha esperada, fecha de entrega y la cantidad total del pedido, que será la suma del producto de todas las cantidades por el precio de cada unidad, que aparecen en cada línea de pedido.
--- 82 Utilice las vistas que ha creado en los pasos anteriores para devolver un listado de los clientes de la ciudad de Madrid que han realizado pagos.
--- 83 Utilice las vistas que ha creado en los pasos anteriores para devolver un listado de los clientes que todavía no han recibido su pedido.
--- 84 Utilice las vistas que ha creado en los pasos anteriores para calcular el número de pedidos que se ha realizado cada uno de los clientes.
--- 85 Utilice las vistas que ha creado en los pasos anteriores para calcular el valor del pedido máximo y mínimo que ha realizado cada cliente.
+-- 80 Escriba una vista que se llame listado_pagos_clientes que muestre un listado donde aparezcan todos los clientes 
+	-- y los pagos que ha realizado cada uno de ellos. La vista deberá tener las siguientes columnas: 
+    -- nombre y apellidos del cliente concatenados, teléfono, ciudad, pais, fecha_pago, total del pago, id de la transacción
+create or replace view listado_pagos_clientes as
+select c.id_cliente, concat(c.nombre_contacto, ' ', c.apellido_contacto) contacto_cliente, c.telefono, c.ciudad, c.pais, p.fecha_pago, p.total, p.id_transaccion
+from clientes c
+join pagos p on c.id_cliente = p.fk_cliente;
 
+-- 81 Escriba una vista que se llame listado_pedidos_clientes que muestre un listado donde aparezcan todos 
+	-- los clientes y los pedidos que ha realizado cada uno de ellos. La vista deberá tener las siguientes columnas:
+    -- nombre y apellidos del cliente concatendados, teléfono, ciudad, pais, código del pedido, fecha del pedido,
+    -- fecha esperada, fecha de entrega y la cantidad total del pedido, que será la suma del producto de todas 
+    -- las cantidades por el precio de cada unidad, que aparecen en cada línea de pedido.
+create or replace view listado_pedidos_clientes as
+select c.id_cliente, concat(c.nombre_contacto, ' ', c.apellido_contacto) contacto_cliente, c.telefono, c.ciudad, c.pais, 
+				p.id_pedido, p.fecha_pedido, p.fecha_esperada, p.fecha_entrega, sum(dp.cantidad * dp.precio_unidad) total
+from clientes c
+join pedidos p on c.id_cliente = p.fk_cliente
+join detalles_pedido dp on p.id_pedido = dp.fk_pedido
+group by p.id_pedido;
+
+-- 82 Utilice las vistas que ha creado en los pasos anteriores para devolver un listado de los clientes 
+	-- de la ciudad de Madrid que han realizado pagos.
+select id_cliente, contacto_cliente
+from listado_pagos_clientes
+where ciudad = 'Madrid';    
+
+-- 83 Utilice las vistas que ha creado en los pasos anteriores para devolver un listado de los clientes 
+	-- que todavía no han recibido su pedido.
+select *
+from listado_pedidos_clientes
+where fecha_entrega is null;
+
+-- 84 Utilice las vistas que ha creado en los pasos anteriores para calcular el número de pedidos que se ha realizado cada uno de los clientes.
+select id_cliente, count(*) cant_pedidos
+from listado_pedidos_clientes
+group by id_cliente;
+
+-- 85 Utilice las vistas que ha creado en los pasos anteriores para calcular el valor del pedido máximo y mínimo que ha realizado cada cliente.
+select id_cliente, max(total) mayor, min(total) menor
+from listado_pedidos_clientes
+group by id_cliente;

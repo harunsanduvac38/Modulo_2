@@ -865,10 +865,51 @@ where p.fecha_entrega <= p.fecha_esperada;
 	-- empleados.fk_oficina is not null por tanto no hay ningun empleado que no tiene una oficina asociadoda.
 
 -- *** Vistas ***
--- 80 Escriba una vista que se llame listado_pagos_clientes que muestre un listado donde aparezcan todos los clientes y los pagos que ha realizado cada uno de ellos. La vista deberá tener las siguientes columnas: nombre y apellidos del cliente concatenados, teléfono, ciudad, pais, fecha_pago, total del pago, id de la transacción
--- 81 Escriba una vista que se llame listado_pedidos_clientes que muestre un listado donde aparezcan todos los clientes y los pedidos que ha realizado cada uno de ellos. La vista deáber tener las siguientes columnas: nombre y apellidos del cliente concatendados, teléfono, ciudad, pais, código del pedido, fecha del pedido, fecha esperada, fecha de entrega y la cantidad total del pedido, que será la suma del producto de todas las cantidades por el precio de cada unidad, que aparecen en cada línea de pedido.
+-- 80 Escriba una vista que se llame listado_pagos_clientes que muestre un listado donde aparezcan todos los clientes y los pagos que ha realizado cada uno de ellos.
+    -- La vista deberá tener las siguientes columnas: nombre y apellidos del cliente concatenados, teléfono, ciudad, pais, fecha_pago, total del pago, id de la transacción
+    
+    create or replace view listado_pagos_clientes as
+    select cli.id_cliente, concat(cli.nombre_contacto, ' ', cli.apellido_contacto) nombre_cliente, cli.telefono, cli.ciudad, cli.pais, pag.fecha_pago, pag.total, pag.id_transaccion
+    from clientes cli
+    join pagos pag on cli.id_cliente = pag.fk_cliente;
+    
+-- 81 Escriba una vista que se llame listado_pedidos_clientes que muestre un listado donde aparezcan todos los clientes y los pedidos que ha realizado cada uno de ellos. 
+	-- La vista deber tener las siguientes columnas: nombre y apellidos del cliente concatendados, teléfono, ciudad, pais, código del pedido, fecha del pedido, fecha esperada,
+	-- fecha de entrega y la cantidad total del pedido, que será la suma del producto de todas las cantidades por el precio de cada unidad, que aparecen en cada línea de pedido.
+    
+    create or replace view listado_pedidos_clientes as
+    select cli.id_cliente, concat(nombre_cliente, ' ', apellido_contacto) nombre_cliente, cli.telefono, cli.ciudad, cli.pais,
+				ped.id_pedido, ped.fecha_pedido, ped.fecha_esperada, ped.fecha_entrega, sum(det.precio_unidad * det.cantidad) total
+	from clientes cli
+	join pedidos ped on ped.fk_cliente = cli.id_cliente
+	join detalles_pedido det on det.fk_pedido = ped.id_pedido
+	group by ped.id_pedido;
+    
 -- 82 Utilice las vistas que ha creado en los pasos anteriores para devolver un listado de los clientes de la ciudad de Madrid que han realizado pagos.
+
+select id_cliente, nombre_cliente
+from listado_pagos_clientes
+where ciudad = 'Madrid';
+;
+
+
 -- 83 Utilice las vistas que ha creado en los pasos anteriores para devolver un listado de los clientes que todavía no han recibido su pedido.
+
+select *
+from listado_pedidos_clientes
+where fecha_entrega is null;
+
 -- 84 Utilice las vistas que ha creado en los pasos anteriores para calcular el número de pedidos que se ha realizado cada uno de los clientes.
+
+select id_cliente, nombre_cliente, count(id_pedido)
+from listado_pedidos_clientes
+group by id_cliente;
+
+
 -- 85 Utilice las vistas que ha creado en los pasos anteriores para calcular el valor del pedido máximo y mínimo que ha realizado cada cliente.
+
+select id_cliente, nombre_cliente, max(total) mayor, min(total) menor
+from listado_pedidos_clientes
+group by id_cliente;
+
 
