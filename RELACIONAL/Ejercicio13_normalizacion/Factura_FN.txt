@@ -1,0 +1,27 @@
+Facturas (id_factura, nro_factura, fecha, id_cliente, nombre_cli, apelido1_cli, apellido2_cli, direccion_cli, cif_cli, ciudad_cli, telefono_cli, familia_prod, id_producto, descripcion_prod, precio_prod, cantidad_fc, precio_fc)
+
+-- 1FN
+
+Factura (id_factura, nro_factura, fecha, id_cliente, nombre_cli, apelido1_cli, apellido2_cli, direccion_cli, cif_cli, ciudad_cli, telefono_cli)
+
+Detalle_factura(id_factura, id_producto, familia_prod, descripcion_prod, precio_prod, cantidad_fc, precio_fc)
+
+— 2FN
+
+Factura (id_factura, nro_factura, fecha, id_cliente, nombre_cli, apellido1_cli, apellido2_cli, direccion_cli, cif_cli, ciudad_cli, telefono_cli)
+
+Detalle_Factura(id_factura, id_producto, cantidad_fc, precio_fc)
+
+Productos(id_producto, familia_prod, descripcion_prod, precio_prod)
+
+— 3FN
+
+Factura(id_factura, nro_factura, fecha, id_cliente)
+
+Cliente(id_cliente, nombre_cli, apellido1_cli, apellido2_cli, direccion_cli, cif_cli, ciudad_cli, telefono_cli)
+
+Detalle_Factura(id_factura, id_producto, cantidad_fc, precio_fc)
+
+Productos(id_producto, familia_prod, descripcion_prod, precio_prod)
+
+
